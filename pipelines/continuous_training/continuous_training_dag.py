@@ -12,8 +12,9 @@ from utils.callbacks import failure_callback, success_callback
 from utils.common import read_sql_file
 
 local_timezone = pendulum.timezone("Asia/Seoul")
-conn_id = "feature_store"
-airflow_dags_path = Variable.get("AIRFLOW_DAGS_PATH")
+conn_id = "feature_store" # connection 만들어놓음 airflow에
+airflow_dags_path = Variable.get("AIRFLOW_DAGS_PATH") # airflow에 variables 넣어놈
+# path ,로 넣어으면 된다. full path로해도되지만 이렇게하는게 가독성이 좋음
 sql_file_path = os.path.join(
     airflow_dags_path,
     "pipelines",
@@ -21,13 +22,12 @@ sql_file_path = os.path.join(
     "data_extract",
     "features.sql",
 )
-
 with DAG(
     dag_id="credit_score_classification_ct",
     default_args={
         "owner": "user",
         "depends_on_past": False,
-        "email": ["otzslayer@gmail.com"],
+        "email": ["lgcnsuser@gmail.com"],
         "on_failure_callback": failure_callback,
         "on_success_callback": success_callback,
     },
@@ -39,8 +39,13 @@ with DAG(
 ) as dag:
     # TODO: 코드 작성
     # 아래 Task를 적절한 Operator를 사용하여 구현
-    
-    data_extract = EmptyOperator(task_id="data_extraction")
+    data_extract = SQLExecuteQueryOperator(
+        task_id="data_extraction",
+        conn_id=conn_id,
+        sql=read_sql_file(sql_file_path),
+        split_statements=True,
+
+    )
 
     data_preprocessing = EmptyOperator(task_id="data_preprocessing")
 
