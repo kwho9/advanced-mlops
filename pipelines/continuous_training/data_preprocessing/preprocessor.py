@@ -98,12 +98,15 @@ class Preprocessor:
         """
 
         # TODO: SQLAlchemy 엔진을 이용해 위 쿼리로 데이터를 불러오는 코드 작성
+        with engine.connect() as conn:
+            data = pd.read_sql(text(q), con=conn)
 
         if data.empty:
             raise ValueError("Fetched data is empty! :(")
 
         return data
-
+    
+    # 학습데이터와 검증데이터를 나누는 함수
     def _train_val_split(
         self,
         data: pd.DataFrame,
@@ -157,8 +160,18 @@ class Preprocessor:
         # 1. 각 피처마다 RobustScaler()를 생성하여 적합시키고 
         # 2. 딕셔너리 robust_scalers에 저장 (key=피처이름, value=scaler)
         # 3. 각 학습 데이터와 검증 데이터의 피처에 적용하여 대체
+        for feature in features:
+            scaler = RobustScaler()
+            robust_scalers[feature] = scaler.fit(x_train[[feature]])
+            x_train[feature] = scaler.transform(x_train[[feature]])
+            x_val[feature] = scaler.transform(x_val[[feature]])
+            print("RobustScaler has been applied to {feature}.")
 
         # TODO: robust_scalers 딕셔너리를 self._encoder_path에 robust_scaler.joblib 이름으로 저장
+        joblib.dump(
+            robust_scalers,
+            os.path.join(self._encoder_path, "robust_scaler.joblib"),
+        )
 
         return x_train, x_val
 
@@ -217,10 +230,10 @@ if __name__ == "__main__":
     # 2. model_name은 문자열로 받으며, 기본값은 "credit_score_classification"
     # 3. base_dt는 문자열을 받으며 기본값은 DateValues.get_current_date()
     parser.add_argument(
-        
+          "--model_name", type=str, default="credit_score_classification"
     )
     parser.add_argument(
-        
+        "--base_dt", type=str, default=DateValues.get_current_date()
     )
 
     args = parser.parse_args()

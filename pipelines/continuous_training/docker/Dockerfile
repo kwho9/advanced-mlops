@@ -5,9 +5,9 @@ ARG USER_HOME=/home/codespace
 
 # TODO: 인자 정보 추가
 # 모든 경로는 프로젝트 루트 폴더를 기준으로 생각
-ARG UTIL_PATH=
-ARG PREPROCESSING_PATH=
-ARG REQUIREMENTS_PATH=
+ARG UTIL_PATH=utils
+ARG PREPROCESSING_PATH=piplines/continuous_trainning/data_preprocessing
+ARG REQUIREMENTS_PATH=piplines/continuous_trainning/docker
 
 RUN groupadd --gid 1000 codespace \
     && useradd --uid 1000 --gid codespace --shell /bin/bash --create-home codespace
